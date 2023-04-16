@@ -1,0 +1,218 @@
+---
+title: "Tarea1"
+author: "DanielMorenoPerez"
+date: "2023-04-10"
+output: html_document
+---
+
+```{r warning=FALSE, message=FALSE}
+library(dplyr)
+library(nycflights13)
+data(flights, package = "nycflights13")
+head(flights, 10)
+names(flights)
+```
+
+# Selección de filas
+
+Los vuelos que tuvieron un retraso en la llegada de dos o más horas.
+
+```{r}
+flights %>%
+  filter(arr_delay >= 120)
+```
+
+Los vuelos que volaron a Houston (códigos de aeropuerto IAH o HOU).
+
+```{r}
+flights %>%
+  filter(dest %in% c("IAH", "HOU"))
+
+```
+
+Los vuelos que fueron operados por American Airlines (código AA), Delta Air Lines (código DL) o United Air Lines (código UA).
+
+```{r}
+flights %>%
+  filter(carrier %in% c("AA", "DL", "UA"))
+
+```
+
+Los vuelos que salieron en verano (meses de julio, agosto y septiembre).
+
+```{r}
+flights %>%
+  filter(month %in% c(7, 8, 9))
+
+```
+
+Los vuelos que llegaron más de dos horas tarde, pero no salieron tarde.
+
+```{r}
+flights %>%
+  filter(arr_delay >= 120, dep_delay < 0)
+
+```
+
+Los vuelos que salieron entre la medianoche y las 6 de la mañana, inclusive.
+
+```{r}
+flights %>%
+  filter(dep_time >= 0 & dep_time <= 600)
+
+```
+
+# Reordenación de filas
+
+## Ejercicio1
+
+Los diez vuelos que recorrieron menor distancia.
+
+```{r}
+flights %>%
+  arrange(distance) %>%
+  head(10)
+
+```
+
+Los cinco vuelos que llegaron con mayor retraso.
+
+```{r}
+flights %>%
+  arrange(desc(arr_delay)) %>%
+  slice(1:5)
+
+```
+
+El vuelo que fue a mayor velocidad.
+
+```{r}
+flights %>%
+  mutate(speed = distance / air_time * 60) %>%
+  arrange(desc(speed)) %>%
+  slice(1)
+```
+
+## Ejercicio2
+
+Reordenar el conjunto de datos flights para que los vuelos cancelados aparezcan los primeros.
+
+```{r}
+flights %>%
+  arrange(is.na(arr_time), year, month, day, flight)
+```
+
+# Selección de columnas
+
+Selecciona las variables dep_time, dep_delay, arr_time y arr_delay de todas las maneras que se te ocurra.
+
+```{r}
+flights %>%
+  select(dep_time, dep_delay, arr_time, arr_delay)
+```
+
+```{r}
+flights %>%
+  select(4, 6, 7, 9)
+```
+
+```{r}
+flights %>%
+  mutate(dep_time, dep_delay, arr_time, arr_delay)
+```
+
+# Creación de columnas
+
+Transformar las variables dep_time y sched_dep_time a minutos desde la medianoche, en lugar de usar el formato hhmm.
+
+```{r}
+flights %>%
+  mutate(dep_time_mins = floor(dep_time/100)*60 + dep_time %% 100,
+         sched_dep_time_mins = floor(sched_dep_time/100)*60 + sched_dep_time %% 100) %>%
+  select(-c(dep_time, sched_dep_time))
+
+```
+
+Hago módulo para quedarme sólo con los minutos. Divido entre 100 para que los minutos queden como decimales y pueda eliminarlos con floor, así puedo sumarlos, multiplicando por 60 para pasarlos a horas, se lo sumo a los minutos anteriores.
+
+# Resúmenes
+
+Calcular para cada día la hora a la que salió el primer y el último vuelo.
+
+```{r}
+flights %>%
+  mutate(date = as.Date(paste(year, month, day, sep = "-"))) %>%
+  group_by(date) %>%
+  summarize(first_dep_time = min(dep_time, na.rm = TRUE),
+            last_dep_time = max(dep_time, na.rm = TRUE))
+
+```
+
+Calcular a qué destinos llegan vuelos de más operadores distintos.
+
+```{r}
+flights %>%
+  group_by(dest, carrier) %>%
+  summarize(n_operators = n_distinct(carrier)) %>%
+  group_by(dest) %>%
+  filter(n_operators == max(n_operators)) %>%
+  select(dest)
+
+```
+# Operador %>%
+
+¿Qué puede concluirse a partir del estudio anterior sobre la influencia de la distancia en el retraso de un vuelo?
+
+italic(Hay una relación débil entre la distancia y el retraso en la llegada de un vuelo)
+
+Realice un estudio similar sobre el retraso en la salida en lugar de la llegada. ¿Coincide la conclusión con el caso anterior?
+```{r}
+library(ggplot2)
+(retraso_filtrado_salida <- flights %>%
+  group_by(dest) %>%
+  summarise(num_vuelos = n(),
+            dist_media = mean(distance, na.rm = TRUE),
+            ret_medio_salida = mean(dep_delay, na.rm = TRUE)
+  ) %>%
+  filter(num_vuelos > 20, dest != "HNL")) 
+
+retraso_filtrado_salida %>%
+  ggplot(aes(x = dist_media, y = ret_medio_salida)) +
+  geom_point(aes(size = num_vuelos), alpha = 1/3) +
+  geom_smooth(se = FALSE)
+
+```
+
+Hay cierta tendencia a que los vuelos más largos tiendan a tener un mayor retraso en la salida, pero la relación es débil
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
+
+```{r}
+
+```
